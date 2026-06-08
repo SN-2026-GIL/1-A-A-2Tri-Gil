@@ -1,4 +1,4 @@
-# 07-05-2026 — SIROS + Supabase
+# 08-05-2026 — SIROS + Supabase
 
 Sub-projeto do programa **SN-2026**.  
 Pipeline de dados com CI/CD completo: SIROS/ANAC → Supabase → GitHub Pages.
