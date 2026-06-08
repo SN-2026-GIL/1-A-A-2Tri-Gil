@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Painel de Voos — SIROS/ANAC</title>
+  <title>Painel de Voos — SN-2026</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -37,251 +37,177 @@
       align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      margin-bottom: 1.75rem;
+      margin-bottom: 1.5rem;
       padding-bottom: 1rem;
       border-bottom: 1px solid var(--border);
     }
 
-    .header-left h1 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--accent);
-    }
+    .header-left h1 { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .header-left p  { font-size: .76rem; color: var(--muted); margin-top: 3px; }
 
-    .header-left p {
-      font-size: .78rem;
-      color: var(--muted);
-      margin-top: 3px;
-    }
+    .header-right { display: flex; align-items: center; gap: .75rem; }
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .anac-badge {
-      font-size: .7rem;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: 99px;
-      background: rgba(74,222,128,.1);
-      color: var(--green);
+    .badge-src {
+      font-size: .68rem; font-weight: 600;
+      padding: 3px 9px; border-radius: 99px;
+      background: rgba(74,222,128,.1); color: var(--green);
       border: 1px solid rgba(74,222,128,.2);
-      white-space: nowrap;
     }
 
-    .clock {
-      font-family: var(--mono);
-      font-size: 1.4rem;
-      color: var(--accent);
-      letter-spacing: .1em;
-    }
+    .clock { font-family: var(--mono); font-size: 1.35rem; color: var(--accent); letter-spacing: .1em; }
 
-    /* ── Filtros ─────────────────────────────────────── */
+    /* ── Painel de filtros ───────────────────────────── */
     .filters-panel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 1rem 1.25rem;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
     }
 
     .filters-title {
-      font-size: .68rem;
-      font-weight: 700;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: .85rem;
+      font-size: .67rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--muted); margin-bottom: .75rem;
     }
 
     .filters-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .75rem;
-      align-items: flex-end;
+      display: flex; flex-wrap: wrap; gap: .75rem; align-items: flex-end;
     }
 
-    .filter-group {
-      display: flex;
-      flex-direction: column;
-      gap: .3rem;
-      min-width: 150px;
-    }
+    .filter-group { display: flex; flex-direction: column; gap: .28rem; min-width: 140px; }
+    .filter-group label { font-size: .71rem; color: var(--muted); }
 
-    .filter-group label {
-      font-size: .72rem;
-      color: var(--muted);
-    }
-
-    select, .btn {
-      background: var(--bg);
-      color: var(--text);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: .42rem .8rem;
-      font-size: .83rem;
-      cursor: pointer;
+    select, input[type="date"], .btn {
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px;
+      padding: .4rem .75rem; font-size: .82rem; cursor: pointer;
       transition: border-color .15s;
     }
+    select:hover,
+    select:focus,
+    input[type="date"]:focus { border-color: var(--accent); outline: none; }
 
-    select:hover, select:focus { border-color: var(--accent); outline: none; }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); }
 
     .btn {
-      background: transparent;
-      color: var(--accent);
-      border-color: var(--accent);
-      align-self: flex-end;
-      white-space: nowrap;
+      background: transparent; color: var(--accent); border-color: var(--accent);
+      align-self: flex-end; white-space: nowrap;
     }
     .btn:hover { background: rgba(56,189,248,.1); }
     .btn:disabled { opacity: .4; cursor: default; }
 
-    .divider {
-      width: 1px;
-      height: 36px;
-      background: var(--border);
-      align-self: flex-end;
+    .divider { width: 1px; height: 36px; background: var(--border); align-self: flex-end; }
+
+    /* ── Cards de info ───────────────────────────────── */
+    .info-cards {
+      display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.25rem;
     }
 
+    .info-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: .55rem .9rem; min-width: 120px;
+    }
+
+    .info-card .lbl { font-size: .63rem; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 2px; }
+    .info-card .val { font-size: .9rem; font-weight: 600; color: var(--text); }
+    .info-card .val.accent { color: var(--accent); }
+
     /* ── Meta bar ────────────────────────────────────── */
-    #meta-bar {
-      font-size: .75rem;
-      color: var(--muted);
-      margin-bottom: 1.25rem;
+    #meta-bar { font-size: .74rem; color: var(--muted); margin-bottom: 1.25rem; }
+
+    /* ── Historico de execucoes ──────────────────────── */
+    .pipeline-bar {
+      font-size: .72rem; color: var(--muted);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: .4rem .75rem;
+      margin-bottom: 1.25rem; display: none;
     }
 
     /* ── Secao ───────────────────────────────────────── */
     .section-title {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      font-size: .68rem;
-      font-weight: 700;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: .5rem;
-      margin-top: 1.6rem;
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .67rem; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: .45rem; margin-top: 1.5rem;
     }
 
-    .arrow-in  { color: var(--green);  font-size: .95rem; }
-    .arrow-out { color: var(--orange); font-size: .95rem; }
+    .arrow-in  { color: var(--green);  font-size: .9rem; }
+    .arrow-out { color: var(--orange); font-size: .9rem; }
 
     /* ── Tabela ──────────────────────────────────────── */
     .table-wrap { overflow-x: auto; }
 
-    table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    table { width: 100%; border-collapse: collapse; font-size: .79rem; }
 
     thead th {
-      background: var(--surface);
-      color: var(--muted);
-      font-weight: 600;
-      font-size: .67rem;
-      letter-spacing: .07em;
-      text-transform: uppercase;
-      padding: .6rem .75rem;
-      text-align: left;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
+      background: var(--surface); color: var(--muted);
+      font-weight: 600; font-size: .66rem; letter-spacing: .07em;
+      text-transform: uppercase; padding: .55rem .75rem;
+      text-align: left; border-bottom: 1px solid var(--border);
+      white-space: nowrap; cursor: pointer; user-select: none;
     }
+    thead th:hover { color: var(--accent); }
+    thead th.sorted { color: var(--accent); }
 
     tbody tr { border-bottom: 1px solid var(--border); }
     tbody tr:hover { background: rgba(255,255,255,.02); }
+    tbody td { padding: .58rem .75rem; white-space: nowrap; vertical-align: middle; }
 
-    tbody td {
-      padding: .6rem .75rem;
-      white-space: nowrap;
-      vertical-align: middle;
-    }
+    .td-time   { font-family: var(--mono); font-size: .86rem; color: var(--accent); }
+    .td-flight { font-family: var(--mono); font-weight: 700; }
+    .td-muted  { color: var(--muted); font-size: .76rem; }
 
-    .td-time    { font-family: var(--mono); font-size: .87rem; color: var(--accent); }
-    .td-flight  { font-family: var(--mono); font-weight: 700; }
-    .td-muted   { color: var(--muted); font-size: .78rem; }
-
-    /* ── Badges ──────────────────────────────────────── */
     .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 2px 8px;
-      border-radius: 99px;
-      font-size: .69rem;
-      font-weight: 600;
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 7px; border-radius: 99px;
+      font-size: .68rem; font-weight: 600;
     }
     .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
     .badge-programado { background: rgba(250,204,21,.1);  color: var(--yellow); }
     .badge-programado .dot { background: var(--yellow); }
-    .badge-domestico  { background: rgba(56,189,248,.1);  color: var(--accent); }
+    .badge-domestico  { background: rgba(56,189,248,.08);  color: var(--accent); }
     .badge-inter      { background: rgba(167,139,250,.1); color: var(--purple); }
 
     .airline-pill {
-      font-size: .69rem;
-      font-weight: 600;
-      padding: 2px 7px;
-      border-radius: 4px;
-      background: rgba(56,189,248,.08);
-      color: var(--accent);
-      border: 1px solid rgba(56,189,248,.18);
+      font-size: .68rem; font-weight: 600; padding: 2px 7px;
+      border-radius: 4px; background: rgba(56,189,248,.08);
+      color: var(--accent); border: 1px solid rgba(56,189,248,.15);
     }
 
     .seats-pill {
-      font-size: .68rem;
-      padding: 1px 6px;
-      border-radius: 4px;
-      background: rgba(74,222,128,.08);
-      color: var(--green);
+      font-size: .67rem; padding: 1px 6px; border-radius: 4px;
+      background: rgba(74,222,128,.08); color: var(--green);
     }
 
     .empty {
-      text-align: center;
-      padding: 2rem 1rem;
-      color: var(--muted);
-      font-size: .85rem;
+      text-align: center; padding: 2rem 1rem;
+      color: var(--muted); font-size: .83rem;
     }
 
-    /* ── Info cards aeroporto ────────────────────────── */
-    .airport-cards {
-      display: flex;
-      gap: .75rem;
+    /* ── Paginacao ───────────────────────────────────── */
+    .pagination {
+      display: flex; align-items: center; gap: .5rem;
+      margin-top: .75rem; font-size: .78rem; color: var(--muted);
       flex-wrap: wrap;
-      margin-bottom: 1.25rem;
     }
 
-    .airport-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: .6rem 1rem;
-      font-size: .8rem;
+    .page-btn {
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: 5px;
+      padding: 3px 10px; font-size: .76rem; cursor: pointer;
+      transition: all .15s;
     }
-
-    .airport-card .label {
-      font-size: .65rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .07em;
-      margin-bottom: 2px;
-    }
-
-    .airport-card .value {
-      font-weight: 600;
-      color: var(--text);
-    }
+    .page-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .page-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+    .page-btn:disabled { opacity: .3; cursor: default; }
 
     /* ── Footer ──────────────────────────────────────── */
     footer {
-      margin-top: 2.5rem;
-      padding-top: 1rem;
+      margin-top: 2.5rem; padding-top: 1rem;
       border-top: 1px solid var(--border);
-      font-size: .71rem;
-      color: var(--muted);
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      gap: .5rem;
+      font-size: .7rem; color: var(--muted);
+      display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem;
     }
     footer a { color: var(--accent); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
@@ -289,21 +215,29 @@
 </head>
 <body>
 
+  <!-- ⚠️ CONFIGURACAO — Substitua pelos valores do seu projeto Supabase -->
+  <script>
+    const SUPABASE_URL      = "https://XXXXXXXXXXXX.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJ...SEU_ANON_KEY_AQUI...";
+    const PER_PAGE          = 50;
+  </script>
+
   <header>
     <div class="header-left">
-      <h1 id="airport-name">Painel de Voos — SIROS/ANAC</h1>
-      <p id="airport-subtitle">Dados oficiais do governo brasileiro · Selecione um aeroporto</p>
+      <h1 id="airport-name">Painel de Voos</h1>
+      <p id="airport-subtitle">Selecione um aeroporto abaixo</p>
     </div>
     <div class="header-right">
-      <span class="anac-badge">✓ Fonte Oficial ANAC</span>
+      <span class="badge-src">✓ SIROS/ANAC + Supabase</span>
       <div class="clock" id="clock">--:--:--</div>
     </div>
   </header>
 
   <!-- Filtros -->
   <div class="filters-panel">
-    <div class="filters-title">Selecionar aeroporto</div>
+    <div class="filters-title">Selecionar aeroporto e data</div>
     <div class="filters-row">
+
       <div class="filter-group">
         <label for="sel-state">Estado</label>
         <select id="sel-state" onchange="onStateChange()">
@@ -325,18 +259,23 @@
         </select>
       </div>
 
+      <div class="filter-group">
+        <label for="sel-date">Data</label>
+        <input type="date" id="sel-date" onchange="loadFlights()">
+      </div>
+
       <div class="divider"></div>
 
       <div class="filter-group">
         <label for="filter-airline">Companhia</label>
-        <select id="filter-airline" onchange="render()">
+        <select id="filter-airline" onchange="applyFilters()">
           <option value="">Todas</option>
         </select>
       </div>
 
       <div class="filter-group">
         <label for="filter-type">Operação</label>
-        <select id="filter-type" onchange="render()">
+        <select id="filter-type" onchange="applyFilters()">
           <option value="">Todas</option>
           <option value="Domestico">Doméstico</option>
           <option value="Internacional">Internacional</option>
@@ -347,27 +286,27 @@
     </div>
   </div>
 
-  <!-- Info cards -->
-  <div class="airport-cards" id="airport-cards" style="display:none">
-    <div class="airport-card">
-      <div class="label">ICAO</div>
-      <div class="value" id="card-icao">—</div>
+  <!-- Cards de info -->
+  <div class="info-cards" id="info-cards" style="display:none">
+    <div class="info-card">
+      <div class="lbl">Aeroporto</div>
+      <div class="val accent" id="card-icao">—</div>
     </div>
-    <div class="airport-card">
-      <div class="label">Aeroporto</div>
-      <div class="value" id="card-nome">—</div>
+    <div class="info-card">
+      <div class="lbl">Data</div>
+      <div class="val" id="card-data">—</div>
     </div>
-    <div class="airport-card">
-      <div class="label">Data referência</div>
-      <div class="value" id="card-data">—</div>
+    <div class="info-card">
+      <div class="lbl">Chegadas</div>
+      <div class="val" id="card-chegadas">—</div>
     </div>
-    <div class="airport-card">
-      <div class="label">Chegadas</div>
-      <div class="value" id="card-chegadas">—</div>
+    <div class="info-card">
+      <div class="lbl">Partidas</div>
+      <div class="val" id="card-partidas">—</div>
     </div>
-    <div class="airport-card">
-      <div class="label">Partidas</div>
-      <div class="value" id="card-partidas">—</div>
+    <div class="info-card">
+      <div class="lbl">Último pipeline</div>
+      <div class="val" id="card-pipeline">—</div>
     </div>
   </div>
 
@@ -377,86 +316,115 @@
   <div class="section-title"><span class="arrow-in">↓</span> Chegadas</div>
   <div class="table-wrap">
     <table>
-      <thead><tr>
-        <th>Horário (BRT)</th>
-        <th>Voo</th>
-        <th>Companhia</th>
-        <th>Aeronave</th>
-        <th>Assentos</th>
-        <th>Origem</th>
-        <th>Operação</th>
-      </tr></thead>
+      <thead>
+        <tr>
+          <th onclick="sortTable('chegadas','chegada_iso')">Horário (BRT) ↕</th>
+          <th>Voo</th>
+          <th>Companhia</th>
+          <th>Aeronave</th>
+          <th>Assentos</th>
+          <th onclick="sortTable('chegadas','icao_origem')">Origem ↕</th>
+          <th>Operação</th>
+        </tr>
+      </thead>
       <tbody id="tbody-chegadas">
         <tr><td colspan="7" class="empty">Selecione um aeroporto para carregar os voos.</td></tr>
       </tbody>
     </table>
   </div>
+  <div class="pagination" id="pag-chegadas"></div>
 
   <!-- Partidas -->
   <div class="section-title"><span class="arrow-out">↑</span> Partidas</div>
   <div class="table-wrap">
     <table>
-      <thead><tr>
-        <th>Horário (BRT)</th>
-        <th>Voo</th>
-        <th>Companhia</th>
-        <th>Aeronave</th>
-        <th>Assentos</th>
-        <th>Destino</th>
-        <th>Operação</th>
-      </tr></thead>
+      <thead>
+        <tr>
+          <th onclick="sortTable('partidas','partida_iso')">Horário (BRT) ↕</th>
+          <th>Voo</th>
+          <th>Companhia</th>
+          <th>Aeronave</th>
+          <th>Assentos</th>
+          <th onclick="sortTable('partidas','icao_destino')">Destino ↕</th>
+          <th>Operação</th>
+        </tr>
+      </thead>
       <tbody id="tbody-partidas">
         <tr><td colspan="7" class="empty">Selecione um aeroporto para carregar os voos.</td></tr>
       </tbody>
     </table>
   </div>
+  <div class="pagination" id="pag-partidas"></div>
 
   <footer>
-    <span>Fonte: <a href="https://sas.anac.gov.br/sas/siros_api/" target="_blank">SIROS/ANAC</a> · Dados oficiais do governo brasileiro</span>
-    <span>Horários em BRT (UTC-3) · Atualização: 4× ao dia via GitHub Actions</span>
-    <span><a href="https://github.com/SN-2026/06-05-2026-siros" target="_blank">Ver no GitHub</a></span>
+    <span>Dados: <a href="https://sas.anac.gov.br/sas/siros_api/" target="_blank">SIROS/ANAC</a> · Banco: <a href="https://supabase.com" target="_blank">Supabase</a></span>
+    <span>Horários em BRT (UTC-3) · Histórico completo disponível</span>
+    <span><a href="https://github.com/SN-2026" target="_blank">Ver no GitHub</a></span>
   </footer>
 
   <script>
-    /* ── Relogio ────────────────────── */
+    /* ── Relógio ────────────────────────────────── */
     function tick() {
       document.getElementById('clock').textContent =
         new Date().toLocaleTimeString('pt-BR');
     }
     tick(); setInterval(tick, 1000);
 
-    /* ── Estado global ──────────────── */
-    let airports = [];
-    let rawData  = null;
-    let currentIcao = '';
+    /* ── API Supabase ───────────────────────────── */
+    const HEADERS = {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    };
 
-    /* ── Helpers ────────────────────── */
-    function fmtDateTime(iso) {
+    async function sbFetch(path) {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: HEADERS });
+      if (!r.ok) throw new Error(`Supabase HTTP ${r.status}: ${await r.text()}`);
+      return r.json();
+    }
+
+    /* ── Estado global ──────────────────────────── */
+    let airports      = [];
+    let currentIcao   = '';
+    let chegadasAll   = [];
+    let partidasAll   = [];
+    let chegadasFilt  = [];
+    let partidasFilt  = [];
+    let pagChegadas   = 1;
+    let pagPartidas   = 1;
+    let sortChegadas  = { col: 'chegada_iso', asc: true };
+    let sortPartidas  = { col: 'partida_iso', asc: true };
+
+    /* ── Helpers ────────────────────────────────── */
+    function fmtHora(iso) {
       if (!iso) return '—';
       try {
-        const d = new Date(iso);
-        return d.toLocaleTimeString('pt-BR', {
-          hour: '2-digit', minute: '2-digit',
-          timeZone: 'America/Sao_Paulo'
+        return new Date(iso).toLocaleTimeString('pt-BR', {
+          hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo'
         });
       } catch { return iso; }
     }
 
-    function fmtDate(iso) {
-      if (!iso) return '—';
-      const [y, m, d] = iso.split('-');
+    function fmtData(str) {
+      if (!str) return '—';
+      const [y, m, d] = str.split('-');
       return `${d}/${m}/${y}`;
+    }
+
+    function todayIso() {
+      return new Date().toLocaleDateString('pt-BR', {
+        timeZone: 'America/Sao_Paulo'
+      }).split('/').reverse().join('-');
     }
 
     function opBadge(tipo) {
       if (!tipo) return '';
-      const isInt = tipo.toLowerCase().includes('inter');
+      const isInt = tipo.includes('nter');
       return isInt
         ? `<span class="badge badge-inter">✈ Internacional</span>`
         : `<span class="badge badge-domestico">✈ Doméstico</span>`;
     }
 
-    /* ── Selects cascata ────────────── */
+    /* ── Selects cascata ────────────────────────── */
     async function loadAirports() {
       try {
         const r = await fetch('data/airports.json');
@@ -470,10 +438,13 @@
           sel.appendChild(o);
         });
         document.getElementById('meta-bar').textContent =
-          `${airports.length} aeroportos disponíveis · Selecione estado → município → aeroporto`;
+          `${airports.length} aeroportos disponíveis · Dados históricos via Supabase`;
       } catch(e) {
-        document.getElementById('meta-bar').textContent = 'Erro ao carregar airports.json: ' + e.message;
+        document.getElementById('meta-bar').textContent = 'Erro ao carregar aeroportos: ' + e.message;
       }
+
+      // Define data padrão como hoje
+      document.getElementById('sel-date').value = todayIso();
     }
 
     function onStateChange() {
@@ -483,13 +454,13 @@
       selCity.innerHTML = '<option value="">Selecione o município</option>';
       selAp.innerHTML   = '<option value="">Selecione o município</option>';
       document.getElementById('btn-refresh').disabled = true;
-      rawData = null; render();
+      chegadasAll = partidasAll = chegadasFilt = partidasFilt = [];
+      renderTables();
       if (!state) return;
       const cities = [...new Set(airports.filter(a => a.state === state).map(a => a.city))].sort();
       cities.forEach(c => {
         const o = document.createElement('option');
-        o.value = o.textContent = c;
-        selCity.appendChild(o);
+        o.value = o.textContent = c; selCity.appendChild(o);
       });
       if (cities.length === 1) { selCity.value = cities[0]; onCityChange(); }
     }
@@ -517,64 +488,69 @@
       if (icao) loadFlights();
     }
 
-    /* ── Carregamento ───────────────── */
+    /* ── Carregar voos do Supabase ──────────────── */
     async function loadFlights() {
       const icao = document.getElementById('sel-airport').value;
-      if (!icao) return;
+      const date = document.getElementById('sel-date').value;
+      if (!icao || !date) return;
       currentIcao = icao;
 
       const btn = document.getElementById('btn-refresh');
-      btn.disabled = true;
-      btn.textContent = '…';
-      document.getElementById('meta-bar').textContent = `Carregando dados de ${icao}...`;
+      btn.disabled = true; btn.textContent = '…';
+      document.getElementById('meta-bar').textContent = `Consultando Supabase para ${icao} em ${fmtData(date)}...`;
 
       try {
-        const r = await fetch(`data/${icao}.json?nc=${Date.now()}`);
-        if (!r.ok) throw new Error(
-          `data/${icao}.json não encontrado (HTTP ${r.status}). ` +
-          `Execute o GitHub Actions para gerar os dados deste aeroporto.`
-        );
-        rawData = await r.json();
+        // Busca chegadas e partidas em paralelo
+        const [chegadas, partidas] = await Promise.all([
+          sbFetch(`voos?icao_destino=eq.${icao}&data_referencia=eq.${date}&order=chegada_iso.asc&limit=500`),
+          sbFetch(`voos?icao_origem=eq.${icao}&data_referencia=eq.${date}&order=partida_iso.asc&limit=500`),
+        ]);
 
+        chegadasAll  = chegadas;
+        partidasAll  = partidas;
+        pagChegadas  = 1;
+        pagPartidas  = 1;
+
+        // Info cards
         const ap = airports.find(a => a.icao === icao);
         document.getElementById('airport-name').textContent =
-          ap ? `${ap.city} — ${ap.name}` : rawData.airport_name || icao;
+          ap ? `${ap.city} — ${ap.name}` : icao;
         document.getElementById('airport-subtitle').textContent =
-          `ICAO: ${icao}${ap ? ' · ' + ap.state : ''} · Fonte: SIROS/ANAC`;
+          `ICAO: ${icao}${ap ? ' · ' + ap.state : ''} · Fonte: SIROS/ANAC via Supabase`;
 
-        // Cards
-        document.getElementById('card-icao').textContent      = icao;
-        document.getElementById('card-nome').textContent      = rawData.airport_name || icao;
-        document.getElementById('card-data').textContent      = fmtDate(rawData.data_referencia);
-        document.getElementById('card-chegadas').textContent  = rawData.arrivals.length;
-        document.getElementById('card-partidas').textContent  = rawData.departures.length;
-        document.getElementById('airport-cards').style.display = 'flex';
+        document.getElementById('card-icao').textContent     = icao;
+        document.getElementById('card-data').textContent     = fmtData(date);
+        document.getElementById('card-chegadas').textContent = chegadas.length;
+        document.getElementById('card-partidas').textContent = partidas.length;
+        document.getElementById('info-cards').style.display  = 'flex';
 
-        const upd = rawData.updated_at
-          ? new Date(rawData.updated_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-          : '—';
+        // Ultimo pipeline
+        try {
+          const exec = await sbFetch('execucoes?order=concluido_em.desc&limit=1');
+          if (exec?.[0]?.concluido_em) {
+            const dt = new Date(exec[0].concluido_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            document.getElementById('card-pipeline').textContent = dt;
+          }
+        } catch {}
+
         document.getElementById('meta-bar').textContent =
-          `Atualizado: ${upd} · ${rawData.arrivals.length} chegadas · ${rawData.departures.length} partidas`;
+          `Dados de ${fmtData(date)} · ${chegadas.length} chegadas · ${partidas.length} partidas · Clique no cabeçalho para ordenar`;
 
         populateAirlineFilter();
-        render();
+        applyFilters();
+
       } catch(e) {
-        document.getElementById('meta-bar').textContent = 'Erro: ' + e.message;
-        ['tbody-chegadas','tbody-partidas'].forEach(id => {
-          document.getElementById(id).innerHTML =
-            `<tr><td colspan="7" class="empty">${e.message}</td></tr>`;
-        });
+        document.getElementById('meta-bar').textContent = 'Erro ao consultar Supabase: ' + e.message;
+        chegadasAll = partidasAll = chegadasFilt = partidasFilt = [];
+        renderTables();
       } finally {
-        btn.disabled = false;
-        btn.textContent = '↺ Atualizar';
+        btn.disabled = false; btn.textContent = '↺ Atualizar';
       }
     }
 
+    /* ── Filtros e ordenação ────────────────────── */
     function populateAirlineFilter() {
-      if (!rawData) return;
-      const airlines = new Set(
-        [...rawData.arrivals, ...rawData.departures].map(f => f.airline).filter(Boolean)
-      );
+      const airlines = new Set([...chegadasAll, ...partidasAll].map(f => f.nome_empresa).filter(Boolean));
       const sel = document.getElementById('filter-airline');
       const cur = sel.value;
       sel.innerHTML = '<option value="">Todas</option>';
@@ -586,52 +562,101 @@
       });
     }
 
-    /* ── Renderizacao ───────────────── */
-    function renderTable(flights, tbodyId) {
-      const tbody  = document.getElementById(tbodyId);
-      const fAirl  = document.getElementById('filter-airline').value;
-      const fType  = document.getElementById('filter-type').value;
+    function applyFilters() {
+      const fAirl = document.getElementById('filter-airline').value;
+      const fType = document.getElementById('filter-type').value;
 
-      if (!rawData) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty">Selecione um aeroporto.</td></tr>';
-        return;
-      }
-
-      const filtered = flights.filter(f => {
-        if (fAirl && f.airline !== fAirl) return false;
-        if (fType && !f.tipo_operacao?.includes(fType)) return false;
-        return true;
-      });
-
-      if (!filtered.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum voo para o filtro selecionado.</td></tr>';
-        return;
-      }
-
-      tbody.innerHTML = filtered.map(f => {
-        //const horario = f.chegada_brt || f.partida_brt || '—';
-        const horario = fmtDateTime(f.chegada_iso || f.partida_iso);
-         const assentos = f.assentos
-          ? `<span class="seats-pill">✦ ${f.assentos}</span>`
-          : '—';
-        return `<tr>
-          <td class="td-time">${horario}</td>
-          <td class="td-flight">${f.callsign || '—'}</td>
-          <td><span class="airline-pill">${f.airline || '—'}</span></td>
-          <td class="td-muted">${f.equipamento || '—'}</td>
-          <td>${assentos}</td>
-          <td class="td-muted">${f.rota || '—'}</td>
-          <td>${opBadge(f.tipo_operacao)}</td>
-        </tr>`;
-      }).join('');
+      chegadasFilt = chegadasAll.filter(f =>
+        (!fAirl || f.nome_empresa === fAirl) &&
+        (!fType || f.tipo_operacao === fType)
+      );
+      partidasFilt = partidasAll.filter(f =>
+        (!fAirl || f.nome_empresa === fAirl) &&
+        (!fType || f.tipo_operacao === fType)
+      );
+      pagChegadas = pagPartidas = 1;
+      renderTables();
     }
 
-    function render() {
-      renderTable(rawData?.arrivals   || [], 'tbody-chegadas');
-      renderTable(rawData?.departures || [], 'tbody-partidas');
+    function sortTable(which, col) {
+      if (which === 'chegadas') {
+        sortChegadas.asc = sortChegadas.col === col ? !sortChegadas.asc : true;
+        sortChegadas.col = col;
+        chegadasFilt.sort((a, b) => {
+          const v = (a[col] || '') < (b[col] || '') ? -1 : 1;
+          return sortChegadas.asc ? v : -v;
+        });
+        pagChegadas = 1;
+      } else {
+        sortPartidas.asc = sortPartidas.col === col ? !sortPartidas.asc : true;
+        sortPartidas.col = col;
+        partidasFilt.sort((a, b) => {
+          const v = (a[col] || '') < (b[col] || '') ? -1 : 1;
+          return sortPartidas.asc ? v : -v;
+        });
+        pagPartidas = 1;
+      }
+      renderTables();
     }
 
-    /* ── Init ───────────────────────── */
+    /* ── Renderização ────────────────────────────── */
+    function renderRow(f, kind) {
+      const horario = kind === 'arrival'
+        ? fmtHora(f.chegada_iso)
+        : fmtHora(f.partida_iso);
+      const rota = kind === 'arrival'
+        ? (f.icao_origem || '—')
+        : (f.icao_destino || '—');
+      const assentos = f.assentos
+        ? `<span class="seats-pill">✦ ${f.assentos}</span>` : '—';
+      return `<tr>
+        <td class="td-time">${horario}</td>
+        <td class="td-flight">${f.icao_empresa || ''}${f.numero_voo || '?'}</td>
+        <td><span class="airline-pill">${f.nome_empresa || '?'}</span></td>
+        <td class="td-muted">${f.equipamento || '—'}</td>
+        <td>${assentos}</td>
+        <td class="td-muted">${rota}</td>
+        <td>${opBadge(f.tipo_operacao)}</td>
+      </tr>`;
+    }
+
+    function renderPagination(id, data, page, setter) {
+      const total = Math.ceil(data.length / PER_PAGE) || 1;
+      const el = document.getElementById(id);
+      if (total <= 1) { el.innerHTML = ''; return; }
+      let html = `<span>${data.length} resultados · Página</span>`;
+      for (let i = 1; i <= total; i++) {
+        html += `<button class="page-btn${i===page?' active':''}" onclick="${setter}(${i})">${i}</button>`;
+      }
+      el.innerHTML = html;
+    }
+
+    function setPageC(p) { pagChegadas = p; renderTables(); }
+    function setPageP(p) { pagPartidas = p; renderTables(); }
+
+    function renderTables() {
+      const tbC = document.getElementById('tbody-chegadas');
+      const tbP = document.getElementById('tbody-partidas');
+
+      if (!chegadasFilt.length) {
+        tbC.innerHTML = '<tr><td colspan="7" class="empty">Nenhuma chegada para o filtro selecionado.</td></tr>';
+      } else {
+        const slice = chegadasFilt.slice((pagChegadas-1)*PER_PAGE, pagChegadas*PER_PAGE);
+        tbC.innerHTML = slice.map(f => renderRow(f, 'arrival')).join('');
+      }
+
+      if (!partidasFilt.length) {
+        tbP.innerHTML = '<tr><td colspan="7" class="empty">Nenhuma partida para o filtro selecionado.</td></tr>';
+      } else {
+        const slice = partidasFilt.slice((pagPartidas-1)*PER_PAGE, pagPartidas*PER_PAGE);
+        tbP.innerHTML = slice.map(f => renderRow(f, 'departure')).join('');
+      }
+
+      renderPagination('pag-chegadas', chegadasFilt, pagChegadas, 'setPageC');
+      renderPagination('pag-partidas', partidasFilt, pagPartidas, 'setPageP');
+    }
+
+    /* ── Init ─────────────────────────────────────── */
     loadAirports();
     setInterval(() => { if (currentIcao) loadFlights(); }, 300000);
   </script>
