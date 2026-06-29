@@ -1,11 +1,10 @@
 """
-fetch_historico_anac.py — Dados históricos ANAC/VRA + Supabase v1.1
+fetch_historico_anac.py — Dados históricos ANAC/VRA + Supabase v1.2
 Correções aplicadas:
-  - URL corrigida para a estrutura atual do portal ANAC:
-    /Voos e operações aéreas/Voo Regular Ativo (VRA)/YYYY/MM - NomeMes/VRA_YYYYM.csv
-  - Nome do arquivo: VRA_YYYYM.csv (mês SEM zero à esquerda: maio = VRA_20265.csv)
-  - Pasta do mês: "05 - Maio", "06 - Junho" etc.
-  - Mapeamento de colunas atualizado para o formato real do CSV
+  - CSV do VRA tem linha de metadado no topo ('Atualizado em: YYYY-MM-DD')
+    antes do cabeçalho real — o script agora detecta e pula essas linhas
+  - URL corrigida para a estrutura atual do portal ANAC
+  - Nome do arquivo: VRA_YYYYM.csv (mês SEM zero à esquerda)
 
 Variáveis de ambiente:
   SUPABASE_URL         → URL do projeto (GitHub Secret)
@@ -68,12 +67,8 @@ MESES_PT = {
 }
 
 mes_nome  = MESES_PT[mes_int]
-mes_pasta = f"{mes_int:02d} - {mes_nome}"          # ex: "06 - Junho"
-arquivo   = f"VRA_{ano}{mes_int}.csv"               # ex: "VRA_20266.csv" (sem zero no mês)
-
-# ── Construção da URL ─────────────────────────────────────────────────────────
-# Estrutura atual do portal ANAC (verificada em junho/2026):
-# /Voos e operações aéreas/Voo Regular Ativo (VRA)/YYYY/MM - NomeMes/VRA_YYYYM.csv
+mes_pasta = f"{mes_int:02d} - {mes_nome}"   # ex: "05 - Maio"
+arquivo   = f"VRA_{ano}{mes_int}.csv"        # ex: "VRA_20265.csv" (sem zero no mês)
 
 BASE_ANAC = "https://sistemas.anac.gov.br/dadosabertos/"
 CAMINHO   = f"Voos e operações aéreas/Voo Regular Ativo (VRA)/{ano}/{mes_pasta}/{arquivo}"
@@ -81,27 +76,28 @@ VRA_URL   = BASE_ANAC + quote(CAMINHO, safe="/")
 
 print(f"\nURL a buscar: {VRA_URL}")
 
-# ── Mapeamentos de colunas do CSV ─────────────────────────────────────────────
-# O VRA pode ter variações nos nomes de colunas entre versões.
-# Cada lista abaixo tenta múltiplos nomes para maior compatibilidade.
+# ── Mapeamentos de colunas ────────────────────────────────────────────────────
 
 COLS = {
-    "empresa":      ["ICAO Empresa Aérea",      "Empresa (Sigla)",          "sg_empresa_icao"],
-    "voo":          ["Número do Voo",            "Numero Voo",               "nr_voo"],
-    "origem":       ["ICAO Aeródromo Origem",    "Aeroporto Origem",         "sg_icao_origem"],
-    "destino":      ["ICAO Aeródromo Destino",   "Aeroporto Destino",        "sg_icao_destino"],
-    "dt_ref":       ["Partida Prevista",          "DT_REFERENCIA",            "data_referencia"],
-    "partida_prev": ["Partida Prevista",          "Partida Prevista",         "dt_partida_prevista"],
-    "partida_real": ["Partida Real",              "Partida Real",             "dt_partida_real"],
-    "chegada_prev": ["Chegada Prevista",          "Chegada Prevista",         "dt_chegada_prevista"],
-    "chegada_real": ["Chegada Real",              "Chegada Real",             "dt_chegada_real"],
-    "situacao":     ["Situação Voo",              "Situacao Voo",             "situacao"],
-    "motivo":       ["Justificativa",             "Motivo Alteracao",         "motivo_alteracao"],
+    "empresa":      ["ICAO Empresa Aérea",    "Empresa (Sigla)",       "sg_empresa_icao"],
+    "voo":          ["Número do Voo",          "Numero Voo",            "nr_voo"],
+    "origem":       ["ICAO Aeródromo Origem",  "Aeroporto Origem",      "sg_icao_origem"],
+    "destino":      ["ICAO Aeródromo Destino", "Aeroporto Destino",     "sg_icao_destino"],
+    "partida_prev": ["Partida Prevista",        "Partida Prevista",      "dt_partida_prevista"],
+    "partida_real": ["Partida Real",            "Partida Real",          "dt_partida_real"],
+    "chegada_prev": ["Chegada Prevista",        "Chegada Prevista",      "dt_chegada_prevista"],
+    "chegada_real": ["Chegada Real",            "Chegada Real",          "dt_chegada_real"],
+    "situacao":     ["Situação Voo",            "Situacao Voo",          "situacao"],
+    "motivo":       ["Justificativa",           "Motivo Alteracao",      "motivo_alteracao"],
 }
+
+# Palavras-chave que identificam a linha de cabeçalho real do CSV
+# (usadas para pular linhas de metadado como "Atualizado em: YYYY-MM-DD")
+CABECALHO_KEYWORDS = ["ICAO", "Empresa", "Voo", "Origem", "Destino",
+                      "Partida", "Chegada", "Situação", "Situacao"]
 
 
 def get_col(row: dict, key: str) -> str:
-    """Tenta múltiplos nomes de coluna para compatibilidade entre versões do CSV."""
     for nome in COLS.get(key, [key]):
         if nome in row:
             return (row[nome] or "").strip()
@@ -109,7 +105,6 @@ def get_col(row: dict, key: str) -> str:
 
 
 def parse_dt_anac(dt_str: str) -> str | None:
-    """Converte data/hora para ISO UTC."""
     if not dt_str or len(dt_str) < 10:
         return None
     for fmt in ("%d/%m/%Y %H:%M", "%Y-%m-%d %H:%M", "%d/%m/%Y %H:%M:%S", "%d/%m/%Y"):
@@ -122,10 +117,10 @@ def parse_dt_anac(dt_str: str) -> str | None:
 
 
 def extrair_data(dt_str: str) -> str | None:
-    """Extrai apenas a data (YYYY-MM-DD) de uma string de data/hora."""
     if not dt_str or len(dt_str) < 10:
         return None
-    for fmt in ("%d/%m/%Y %H:%M", "%d/%m/%Y %H:%M:%S", "%d/%m/%Y", "%Y-%m-%d %H:%M", "%Y-%m-%d"):
+    for fmt in ("%d/%m/%Y %H:%M", "%d/%m/%Y %H:%M:%S", "%d/%m/%Y",
+                "%Y-%m-%d %H:%M", "%Y-%m-%d"):
         try:
             return datetime.strptime(dt_str.strip(), fmt).date().isoformat()
         except ValueError:
@@ -134,7 +129,6 @@ def extrair_data(dt_str: str) -> str | None:
 
 
 def diff_minutos(prev: str, real: str) -> int | None:
-    """Calcula atraso em minutos entre horário previsto e real."""
     for fmt in ("%d/%m/%Y %H:%M", "%d/%m/%Y %H:%M:%S"):
         try:
             dp = datetime.strptime(prev.strip(), fmt)
@@ -145,6 +139,19 @@ def diff_minutos(prev: str, real: str) -> int | None:
     return None
 
 
+def encontrar_inicio_cabecalho(linhas: list[str], sep: str) -> int:
+    """
+    Localiza o índice da linha que contém o cabeçalho real do CSV.
+    Pula linhas de metadado como 'Atualizado em: YYYY-MM-DD'.
+    """
+    for i, linha in enumerate(linhas):
+        # Verifica se a linha contém pelo menos uma palavra-chave de cabeçalho
+        if any(kw in linha for kw in CABECALHO_KEYWORDS):
+            print(f"  Cabeçalho encontrado na linha {i + 1}: {linha.strip()[:80]}")
+            return i
+    return 0  # fallback: usa a primeira linha
+
+
 # ── Busca o arquivo VRA ───────────────────────────────────────────────────────
 
 def baixar_vra() -> list[dict]:
@@ -152,12 +159,12 @@ def baixar_vra() -> list[dict]:
     try:
         r = requests.get(VRA_URL, timeout=120)
         if r.status_code == 404:
-            print(f"  Não encontrado (404). Verifique se o arquivo {arquivo} está disponível.")
-            print(f"  URL completa: {VRA_URL}")
+            print(f"  Não encontrado (404).")
+            print(f"  Verifique se o arquivo {arquivo} já foi publicado pela ANAC.")
             return []
         r.raise_for_status()
 
-        # Tenta decodificação: utf-8-sig (com BOM), depois latin-1
+        # Decodificação: tenta utf-8-sig (com BOM), utf-8, latin-1
         for enc in ("utf-8-sig", "utf-8", "latin-1"):
             try:
                 texto = r.content.decode(enc)
@@ -167,19 +174,31 @@ def baixar_vra() -> list[dict]:
         else:
             texto = r.content.decode("latin-1", errors="replace")
 
-        # Detecta o separador (ponto-e-vírgula ou vírgula)
-        primeira_linha = texto.split("\n")[0]
-        sep = ";" if ";" in primeira_linha else ","
+        linhas = texto.split("\n")
+        print(f"  Total de linhas no arquivo: {len(linhas)}")
 
-        reader   = csv.DictReader(io.StringIO(texto), delimiter=sep)
+        # Detecta o separador (ponto-e-vírgula ou vírgula) usando a primeira linha
+        # que pareça um cabeçalho real
+        sep = ";"
+        for linha in linhas[:10]:
+            if any(kw in linha for kw in CABECALHO_KEYWORDS):
+                sep = ";" if linha.count(";") >= linha.count(",") else ","
+                break
+
+        # Localiza o início do cabeçalho real (pula metadados do topo)
+        inicio = encontrar_inicio_cabecalho(linhas, sep)
+
+        # Reconstrói o texto CSV a partir do cabeçalho real
+        texto_csv = "\n".join(linhas[inicio:])
+        reader    = csv.DictReader(io.StringIO(texto_csv), delimiter=sep)
         registros = list(reader)
-        print(f"  VRA carregado: {len(registros)} linhas brutas")
 
-        # Mostra as colunas encontradas (útil para diagnóstico)
+        print(f"  Registros carregados: {len(registros)}")
         if registros:
-            print(f"  Colunas no CSV: {list(registros[0].keys())}")
+            print(f"  Colunas detectadas: {list(registros[0].keys())[:6]} ...")
 
         return registros
+
     except Exception as e:
         print(f"  [ERRO] {e}")
         return []
@@ -188,48 +207,47 @@ def baixar_vra() -> list[dict]:
 # ── Processa e filtra registros ───────────────────────────────────────────────
 
 def processar_vra(linhas: list[dict]) -> list[dict]:
-    resultado  = []
-    sem_filtro = 0
+    resultado = []
+    sem_icao  = 0
 
     for row in linhas:
-        # Tenta encontrar origem e destino em qualquer coluna disponível
         origem  = get_col(row, "origem").upper()
         destino = get_col(row, "destino").upper()
 
         if not origem and not destino:
-            sem_filtro += 1
+            sem_icao += 1
             continue
 
         if origem not in AIRPORTS and destino not in AIRPORTS:
             continue
 
-        empresa       = get_col(row, "empresa")
-        nr_voo        = get_col(row, "voo")
-        partida_prev  = get_col(row, "partida_prev")
-        partida_real  = get_col(row, "partida_real")
-        chegada_prev  = get_col(row, "chegada_prev")
-        chegada_real  = get_col(row, "chegada_real")
-        situacao      = get_col(row, "situacao")
-        motivo        = get_col(row, "motivo")
-        dt_ref        = extrair_data(partida_prev or partida_real)
+        empresa      = get_col(row, "empresa")
+        nr_voo       = get_col(row, "voo")
+        part_prev    = get_col(row, "partida_prev")
+        part_real    = get_col(row, "partida_real")
+        cheg_prev    = get_col(row, "chegada_prev")
+        cheg_real    = get_col(row, "chegada_real")
+        situacao     = get_col(row, "situacao")
+        motivo       = get_col(row, "motivo")
+        dt_ref       = extrair_data(part_prev or part_real)
 
         resultado.append({
             "ano_mes":          ano_mes,
-            "icao_empresa":     empresa or None,
-            "nr_voo":           nr_voo  or None,
-            "icao_origem":      origem  or None,
-            "icao_destino":     destino or None,
+            "icao_empresa":     empresa  or None,
+            "nr_voo":           nr_voo   or None,
+            "icao_origem":      origem   or None,
+            "icao_destino":     destino  or None,
             "dt_referencia":    dt_ref,
-            "partida_real":     parse_dt_anac(partida_real),
-            "chegada_real":     parse_dt_anac(chegada_real),
-            "atraso_partida":   diff_minutos(partida_prev, partida_real),
-            "atraso_chegada":   diff_minutos(chegada_prev, chegada_real),
+            "partida_real":     parse_dt_anac(part_real),
+            "chegada_real":     parse_dt_anac(cheg_real),
+            "atraso_partida":   diff_minutos(part_prev, part_real),
+            "atraso_chegada":   diff_minutos(cheg_prev, cheg_real),
             "situacao":         situacao.lower() if situacao else None,
             "motivo_alteracao": motivo or None,
         })
 
-    if sem_filtro:
-        print(f"  Aviso: {sem_filtro} linha(s) sem campos de origem/destino reconhecíveis")
+    if sem_icao:
+        print(f"  Aviso: {sem_icao} linha(s) sem ICAO de origem/destino — ignoradas")
     print(f"  Registros filtrados para os aeroportos configurados: {len(resultado)}")
     return resultado
 
@@ -239,7 +257,7 @@ def processar_vra(linhas: list[dict]) -> list[dict]:
 linhas_vra = baixar_vra()
 
 if not linhas_vra:
-    print("\n[AVISO] VRA não disponível para o período. Encerrando.")
+    print("\n[AVISO] VRA não disponível ou vazio. Encerrando.")
     sys.exit(0)
 
 registros   = processar_vra(linhas_vra)
@@ -248,8 +266,9 @@ erros       = 0
 
 if not registros:
     print("\n[AVISO] Nenhum registro filtrado para os aeroportos configurados.")
-    print("  Verifique se as colunas de origem/destino no CSV correspondem ao mapeamento.")
     sys.exit(0)
+
+print(f"\nEnviando {len(registros)} registros ao Supabase em lotes de {LOTE}...")
 
 for i in range(0, len(registros), LOTE):
     lote     = registros[i:i + LOTE]
