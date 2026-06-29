@@ -279,6 +279,32 @@ if not registros:
     print("\n[AVISO] Nenhum registro filtrado. Encerrando.")
     sys.exit(0)
 
+# Deduplicação: remove registros com a mesma chave única antes do envio
+# O VRA pode conter linhas duplicadas no arquivo, causando erro PostgreSQL
+# 21000: ON CONFLICT DO UPDATE command cannot affect row a second time
+def deduplicar(lista: list) -> list:
+    seen   = set()
+    result = []
+    for r in lista:
+        key = (
+            r.get("ano_mes"),
+            r.get("icao_empresa"),
+            r.get("nr_voo"),
+            r.get("icao_origem"),
+            r.get("icao_destino"),
+            r.get("dt_referencia"),
+        )
+        if key not in seen:
+            seen.add(key)
+            result.append(r)
+    return result
+
+antes     = len(registros)
+registros = deduplicar(registros)
+removidos = antes - len(registros)
+if removidos:
+    print(f"  Deduplicação: {removidos} registro(s) duplicado(s) removido(s) antes do envio")
+
 print(f"\nEnviando {len(registros)} registros em lotes de {LOTE}...")
 
 for i in range(0, len(registros), LOTE):
