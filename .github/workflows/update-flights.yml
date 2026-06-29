@@ -41,7 +41,7 @@ jobs:
       - name: Buscar SIROS e inserir no Supabase
         run: python scripts/fetch_flights.py
         env:
-          AIRPORTS:             ${{ vars.AIRPORTS || 'SBCA,SBGR,SBSP,SBCT,SBGL,SBBR,SBFL,SBPA,SBSV,SBFZ' }}
+          AIRPORTS:             ${{ vars.AIRPORTS || 'SBCA,SBGR,SBSP,SBCT,SBGL,SBBR,SBFL,SBPA,SBSV,SBFZ,SBEG,SBBE,SBRF,SBCF,SBMO,SBBV,SBPV,SBMQ,SBPJ,SBCG,SBCY,SBGO,SBUL,SBMK,SBVT,SBSL,SBTE,SBJP,SBSE,SBSG,SBLO,SBMG,SBFI,SBRP,SBGL,SBRJ,SBPA,SBCX,SBJV,SBNF,SBKP' }}
           SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
 
